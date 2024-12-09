@@ -1,23 +1,32 @@
-﻿namespace AdventOfCode2024.Day1;
+﻿namespace AdventOfCode2024;
 
-public static class Part1
+internal static class Day01
 {
-    /* Pair up the smallest number in the left list with the smallest number in the right list, 
-     * then the second-smallest left number with the second-smallest right number, and so on.
-     * 
-     * Within each pair, figure out how far apart the two numbers are; 
-     * you'll need to add up all of those distances. */
     public static void Solve()
     {
-        string inputFile = @"Day1\test-input.txt";
+        string inputFile = @"Day1\input.txt";
+        if (!File.Exists(inputFile)) inputFile = @"Day1\test-input.txt";
 
-        var totalDistance = File.ReadLines(inputFile)
+        (List<int> first, List<int> second) lists = File.ReadLines(inputFile)
             .Select(SplitLine)
             .Select(ToIntPairs)
             .WhereNotNull()
-            .ToSortedList()
-            .CalcualteTotalDistance();
+            .ToLists()
+            .SortLists();
+
+        /* part 1 */
+        var totalDistance = lists.CalcualteTotalDistance();
         Console.WriteLine($"Total Distance: {totalDistance}");
+
+        /* part 2 */
+        var secondCounts = lists.second.CountBy(i => i)
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
+
+        var totalSimilarity = lists.first
+            .Where(i => secondCounts.ContainsKey(i))
+            .Sum(i => i * secondCounts[i]);
+
+        Console.WriteLine($"similarity score: {totalSimilarity}");
     }
 
     private static string[] SplitLine(string line) =>
@@ -32,7 +41,7 @@ public static class Part1
     private static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> source) where T : struct =>
         source.Where(e => e.HasValue).Select(e => e!.Value);
 
-    private static (List<int> first, List<int> second) ToSortedList(this IEnumerable<(int, int)> list)
+    private static (List<int> first, List<int> second) ToLists(this IEnumerable<(int, int)> list)
     {
         (List<int> first, List<int> second) = ([], []);
         foreach (var (a, b) in list)
@@ -41,9 +50,14 @@ public static class Part1
             second.Add(b);
         }
 
-        first.Sort();
-        second.Sort();
         return (first, second);
+    }
+
+    private static (List<int> first, List<int> second) SortLists(this (List<int> first, List<int> second) lists)
+    {
+        lists.first.Sort(); 
+        lists.second.Sort();
+        return (lists.first, lists.second);
     }
 
     private static int CalcualteTotalDistance(this (List<int> first, List<int> second) list) =>

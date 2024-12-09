@@ -13,4 +13,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Day1\input.txt">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
