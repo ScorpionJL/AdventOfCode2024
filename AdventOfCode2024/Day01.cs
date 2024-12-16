@@ -4,6 +4,8 @@ internal static class Day01
 {
     public static void Solve()
     {
+        Console.WriteLine("-- Day 1");
+
         string inputFile = @"Day1\input.txt";
         if (!File.Exists(inputFile)) inputFile = @"Day1\test-input.txt";
 
