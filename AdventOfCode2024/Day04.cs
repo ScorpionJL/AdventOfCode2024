@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.CompilerServices;
+﻿using CharPair = (char top, char bottom);
 
 namespace AdventOfCode2024;
 
@@ -16,8 +14,14 @@ internal static class Day04
 
         var grid = File.ReadLines(inputFile).ToArray();
 
+
         int count = grid.GetWordCount("XMAS");
         Console.WriteLine($"Word count: {count}");
+
+        int xCount = grid.GetXWordCount();
+        Console.WriteLine($"X Word count: {xCount}");
+
+
     }
 
 
@@ -30,13 +34,9 @@ internal static class Day04
             grid.FindWordAtPosition(coord.row, coord.col, reversedWordArray));
     }
 
-    private static IEnumerable<(int row, int col)> GridCoordinates(int rows, int cols) =>
-        Enumerable.Range(0, rows).SelectMany(row =>
-        Enumerable.Range(0, cols), (row, col) => (row, col));
-
     private static int FindWordAtPosition(this string[] grid, int row, int col, char[] word) =>
         grid[row][col] == word[0]   // only check for the word if the first letter matches
-        ? Directions.Sum(direction => grid.FindWord(row, col, direction, word) ? 1 : 0)
+        ? SearchDirections.Sum(direction => grid.FindWord(row, col, direction, word) ? 1 : 0)
         : 0;
 
     private static bool FindWord(this string[] grid, int row, int col, SearchDirection direction, char[] word)
@@ -49,7 +49,7 @@ internal static class Day04
         {
             row += direction.X;
             col += direction.Y;
-            if (row < 0 || row >= lastRow || col < 0 || col >= lastCol) { return false; }
+            if (row >= lastRow || col < 0 || col >= lastCol) { return false; }
 
             if (word[i] != grid[row][col]) { return false; }
         }
@@ -58,42 +58,45 @@ internal static class Day04
     }
 
 
+    private static int GetXWordCount(this string[] grid) => 
+        GridCoordinates(grid.Length - 2, grid[0].Length - 2, 1, 1)
+        .Where(coord => grid[coord.row][coord.col] == 'A')
+        .Count(coord => grid.GetDiagnalChars(coord.row, coord.col).All(IsValidDiagnalPair));
+
+    private static CharPair[] GetDiagnalChars(this string[] grid, int row, int col) =>
+    [
+        grid.LeftRightDiagnalChars(row, col),
+        grid.RightLeftDiagnalChars(row, col)
+    ];
+    private static CharPair LeftRightDiagnalChars(this string[] grid, int row, int col) =>
+    (
+        grid[row - 1][col - 1], // top-left
+        grid[row + 1][col + 1]  // bottom-right
+    );
+    private static CharPair RightLeftDiagnalChars(this string[] grid, int row, int col) =>
+    (
+        grid[row - 1][col + 1], // top-right
+        grid[row + 1][col - 1]  // bottom-left  
+    );
+
+    private static bool IsValidDiagnalPair(this CharPair chars) => chars switch
+    {
+        ('M', 'S') => true,
+        ('S', 'M') => true,
+        _ => false
+    };
+
+
+    private static IEnumerable<(int row, int col)> GridCoordinates(int rows, int cols, int rowStart = 0, int colStart = 0) =>
+        Enumerable.Range(rowStart, rows).SelectMany(row =>
+        Enumerable.Range(colStart, cols), (row, col) => (row, col));
+
     private record struct SearchDirection(int X, int Y);
-    private static readonly SearchDirection[] Directions =
+    private static readonly SearchDirection[] SearchDirections =
     [
         new(0, 1),    // east
         new(1, 1),    // south-east
         new(1, 0),    // south
         new(1, -1),   // south-west
     ];
-
-    private record struct SearchDiagnals(SearchDirection Top, SearchDirection Bottom);
-    private static SearchDirection TopLeft = new(-1, -1);
-    private static SearchDirection TopRight = new(-1, +1);
-    private static SearchDirection BottomLeft = new(+1, -1);
-    private static SearchDirection BottomRight = new(+1, +1);
-    private static readonly SearchDiagnals[] Diagnals =
-    [
-        new(TopLeft, BottomRight),  // top-left to bottom-right
-        new(TopRight, BottomLeft),  // top-right to bottom-left
-    ];
-
-    private static string ToDirectionName(this SearchDirection self)
-    {
-        return self switch
-        {
-            (0, 1) => "east",
-            (1, 1) => "south-east",
-            (1, 0) => "south",
-            (1, -1) => "south-west",
-            _ => "unknown"
-        };
-    }
-
-
-    public static string ReverseString(this string text) => string.Create(text.Length, text, (chars, text) =>
-    {
-        text.AsSpan().CopyTo(chars);
-        chars.Reverse();
-    });
 }
