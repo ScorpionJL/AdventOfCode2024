@@ -20,8 +20,6 @@ internal static class Day04
 
         int xCount = grid.GetXWordCount();
         Console.WriteLine($"X Word count: {xCount}");
-
-
     }
 
 
