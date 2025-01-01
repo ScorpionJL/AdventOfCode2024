@@ -12,7 +12,7 @@ internal static class Day05
         string inputFile = @"Day5\input.txt";
         if (!File.Exists(inputFile)) inputFile = @"Day5\test-input.txt";
 
-        PageOrderRules pageOrderRules = [];  
+        PageOrderRules pageOrderRules = [];
         List<int[]> pageUpdates = [];
         ReadInputFile(inputFile, pageOrderRules, pageUpdates);
 
@@ -20,6 +20,12 @@ internal static class Day05
             .Where(pages => pages.AllPagesInCorrectOrder(pageOrderRules))
             .Sum(pages => pages[pages.Length / 2]);
         Console.WriteLine($"Valid page total: {validPageTotal}");
+
+        var correctedPageTotal = pageUpdates
+            .Where(pages => pages.AnyPagesInWrongOrder(pageOrderRules))
+            .Select(pages => pages.SortPages(pageOrderRules))
+            .Sum(pages => pages[pages.Length / 2]);
+        Console.WriteLine($"Corrected page total: {correctedPageTotal}");
     }
 
 
@@ -53,14 +59,22 @@ internal static class Day05
         .Select(page => int.Parse(page))
         .ToArray();
 
-    
-    private static bool AllPagesInCorrectOrder(this int[] pages, PageOrderRules pageOrderRules) => 
+
+    private static bool AllPagesInCorrectOrder(this int[] pages, PageOrderRules pageOrderRules) =>
         !pages.AnyPagesInWrongOrder(pageOrderRules);
 
     private static bool AnyPagesInWrongOrder(this int[] pages, PageOrderRules pageOrderRules) => pages
         .Select((page, index) => (page, remainingPages: pages[(index + 1)..]))
         .Any(pageList => pageList.remainingPages.AnyThatMustPrintBefore(pageList.page, pageOrderRules));
 
-    private static bool AnyThatMustPrintBefore(this int[] remainingPages, int page, PageOrderRules pageOrderRules) => 
+    private static bool AnyThatMustPrintBefore(this int[] remainingPages, int page, PageOrderRules pageOrderRules) =>
         remainingPages.Any(remainingPage => pageOrderRules.GetValueOrDefault(page, []).Contains(remainingPage));
+
+
+    private static int[] SortPages(this int[] pages, PageOrderRules pageOrderRules)
+    {
+        var pageList = pages.ToList();
+        pageList.Sort((a, b) => (a == b) ? 0 : pageOrderRules.GetValueOrDefault(a, []).Contains(b) ? 1 : -1);
+        return [.. pageList];
+    }
 }
