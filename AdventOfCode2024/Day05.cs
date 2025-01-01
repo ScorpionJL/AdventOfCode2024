@@ -12,7 +12,7 @@ internal static class Day05
         string inputFile = @"Day5\input.txt";
         if (!File.Exists(inputFile)) inputFile = @"Day5\test-input.txt";
 
-        PageOrderRules pageOrderRules = [];  
+        PageOrderRules pageOrderRules = [];
         List<int[]> pageUpdates = [];
         ReadInputFile(inputFile, pageOrderRules, pageUpdates);
 
@@ -59,15 +59,15 @@ internal static class Day05
         .Select(page => int.Parse(page))
         .ToArray();
 
-    
-    private static bool AllPagesInCorrectOrder(this int[] pages, PageOrderRules pageOrderRules) => 
+
+    private static bool AllPagesInCorrectOrder(this int[] pages, PageOrderRules pageOrderRules) =>
         !pages.AnyPagesInWrongOrder(pageOrderRules);
 
     private static bool AnyPagesInWrongOrder(this int[] pages, PageOrderRules pageOrderRules) => pages
         .Select((page, index) => (page, remainingPages: pages[(index + 1)..]))
         .Any(pageList => pageList.remainingPages.AnyThatMustPrintBefore(pageList.page, pageOrderRules));
 
-    private static bool AnyThatMustPrintBefore(this int[] remainingPages, int page, PageOrderRules pageOrderRules) => 
+    private static bool AnyThatMustPrintBefore(this int[] remainingPages, int page, PageOrderRules pageOrderRules) =>
         remainingPages.Any(remainingPage => pageOrderRules.GetValueOrDefault(page, []).Contains(remainingPage));
 
 
