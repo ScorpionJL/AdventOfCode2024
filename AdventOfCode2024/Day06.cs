@@ -1,6 +1,4 @@
-﻿using System.Dynamic;
-using System.Runtime.CompilerServices;
-using Coordinate = (int row, int col);
+﻿using Coordinate = (int row, int col);
 
 namespace AdventOfCode2024;
 
@@ -20,9 +18,15 @@ internal static class Day06
             .Select(coord => new Guard(grid[coord.row][coord.col], coord))
             .First();
 
-        HashSet<Coordinate> visited = [guard.Position, ..grid.Traverse(guard)];
+        HashSet<Coordinate> visited = [guard.Position, .. grid.Traverse(guard)];
         Console.WriteLine($"Visited: {visited.Count}");
+
+        var obstacleOptions = visited
+            .Where(position => grid.TraverseWithNewObstacle(guard, position))
+            .Count();
+        Console.WriteLine($"Obstacle options: {obstacleOptions}");
     }
+
 
     private static IEnumerable<Coordinate> Traverse(this string[] grid, Guard guard)
     {
@@ -42,11 +46,31 @@ internal static class Day06
         grid[position.row][position.col] == '^' || grid[position.row][position.col] == '>' ||
         grid[position.row][position.col] == 'v' || grid[position.row][position.col] == '<';
 
-    private static bool IsObstacle(this Coordinate position, string[] grid) => 
+    private static bool IsObstacle(this Coordinate position, string[] grid) =>
         grid[position.row][position.col] == '#';
 
     private static bool IsExit(this Coordinate position, int rows, int cols) =>
         position.row < 0 || position.row >= rows || position.col < 0 || position.col >= cols;
+
+
+    private static bool TraverseWithNewObstacle(this string[] grid, Guard guard, Coordinate newObstacle)
+    {
+        var rows = grid.Length;
+        var cols = grid[0].Length;
+
+        HashSet<Guard> guardPath = [guard];
+
+        while (true)
+        {
+            var nextPosition = guard.NextPosition;
+            if (nextPosition.IsExit(rows, cols)) { return false; }
+
+            if (nextPosition.IsObstacle(grid) || nextPosition == newObstacle) { guard.Turn(); }
+            else { _ = guard.MoveTo(nextPosition); }
+
+            if (!guardPath.Add(guard)) return true;
+        }
+    }
 
 
     private record struct Guard(char Direction, Coordinate Position)
