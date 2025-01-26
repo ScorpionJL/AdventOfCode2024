@@ -24,7 +24,26 @@ internal static class Day07
             .Select(GetEquationValue)
             .Sum();
         Console.WriteLine($"Calibration result: {calibrationResult}");
+
+        var concatResult = input
+            .Select(GetEquationValueConcat)
+            .Sum();
+        Console.WriteLine($"Concat result: {concatResult}");
     }
+
+    static long GetEquationValueConcat(this (long[] values, long expected) input) => GetEquationValueConcat(input.values, input.expected);
+
+    static long GetEquationValueConcat(long[] values, long expected) => values
+        .Skip(1)
+        .Aggregate(
+            seed: new HashSet<long> { values[0] },
+            func: (acc, value) => ApplyOperationsConcat(acc, value, expected),
+            resultSelector: result => result.Contains(expected) ? expected : 0);
+
+    static HashSet<long> ApplyOperationsConcat(IEnumerable<long> state, long value, long max) => state
+        .SelectMany<long, long>(r => [r + value, r * value, long.Parse($"{r}{value}")])
+        .Where(r => r <= max)
+        .ToHashSet();
 
     static long GetEquationValue(this (long[] values, long expected) input) => GetEquationValue(input.values, input.expected);
 
